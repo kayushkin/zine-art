@@ -6,6 +6,12 @@ piece('crab-wave', 620, 560, () => crab(300, 350, 30, { pose: 'wave' }));
 piece('crab-cheer', 620, 560, () => crab(310, 360, 30, { pose: 'cheer', eyes: 'star' }));
 piece('crab-think', 620, 560, () => crab(290, 360, 30, { pose: 'think', eyes: 'look', mouth: 'flat' }));
 piece('crab-sleep', 620, 560, () => crab(290, 370, 30, { pose: 'sleep', eyes: 'closed' }));
+// the status row's mascot, one per mood of bridge-ui's status slot (`data-mood`): drawn small, heavier ink
+piece('crab-mini-thinking', 220, 200, () => crab(104, 128, 11, { pose: 'think', eyes: 'look', mouth: 'flat' }), { brushScale: 1.1 });
+piece('crab-mini-working', 220, 200, () => crab(118, 124, 11, { pose: 'run', mouth: 'grin' }), { brushScale: 1.1 });
+piece('crab-mini-waiting', 220, 200, () => crab(116, 128, 11, { pose: 'wave', mouth: 'o', mark: '!' }), { brushScale: 1.1 });
+piece('crab-mini-resting', 220, 200, () => crab(100, 132, 11, { pose: 'sleep', eyes: 'closed' }), { brushScale: 1.1 });
+piece('crab-mini-trouble', 220, 220, () => crab(110, 150, 11, { pose: 'alarm', eyes: 'x', mouth: 'o' }), { brushScale: 1.1 });
 // the brand mark in the top bar: drawn small, so the ink is heavier for its size
 piece('crab-mark', 200, 190, () => crab(98, 118, 10, { pose: 'wave' }), { brushScale: 1.1 });
 

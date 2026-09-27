@@ -3,8 +3,9 @@
 //
 // crab(cx, cy, s, o): (cx, cy) is the centre of the shell, `s` the unit; the shell is 10s wide and 6.4s tall, the
 // eyes reach up to about -7s and the legs down to about +5s.
-//   o.pose:  'wave' (right claw up), 'cheer' (both up), 'think' (claw at the chin), 'sleep' (eyes shut, claws down)
-//   o.eyes:  'open' | 'star' (a star in both) | 'closed' | 'look' (glancing to the side, as in the reference)
+//   o.pose:  'wave' (right claw up), 'cheer' (both up), 'think' (claw at the chin), 'sleep' (eyes shut, claws down),
+//            'run' (claws pumping, speed lines behind), 'alarm' (claws flung up, a "!" by the head)
+//   o.eyes:  'open' | 'star' (a star in both) | 'closed' | 'look' (glancing to the side, as in the reference) | 'x'
 //   o.mouth: 'grin' | 'o' | 'smile' | 'flat'
 //   o.headset: false to leave it off
 function crab(cx, cy, s, o = {}) {
@@ -28,6 +29,12 @@ function crab(cx, cy, s, o = {}) {
   if (pose === 'wave') { claw(-1, -6.4, 1.6, .25, .9); claw(1, 7.0, -4.6, .55, -.35); }
   else if (pose === 'cheer') { claw(-1, -7.0, -4.6, .55, .35); claw(1, 7.0, -4.6, .55, -.35); }
   else if (pose === 'think') { claw(-1, -6.4, 1.6, .25, .9); claw(1, 3.6, 2.6, .15, -2.2); }
+  else if (pose === 'run') {
+    // speed lines trailing off to the left, then one claw thrust forward and one back
+    for (const [y, len] of [[-1.6, 3.2], [0.2, 4.2], [2.0, 2.8]]) inkLine(pts([[-6.2, y], [-6.2 - len, y]]), sw * .9, PAL.ink, 'inkfine', 0);
+    claw(-1, -6.8, 3.2, .2, 1.4); claw(1, 7.4, -2.6, .6, -.1);
+  }
+  else if (pose === 'alarm') { claw(-1, -7.4, -5.2, .7, .5); claw(1, 7.4, -5.2, .7, -.5); }
   else { claw(-1, -6.0, 2.4, .1, 1.2); claw(1, 6.0, 2.4, .1, -1.2); }
   commit();
 
@@ -76,6 +83,11 @@ function crab(cx, cy, s, o = {}) {
       inkLine([[ex - r * .6, ey + r * .1], [ex, ey + r * .45], [ex + r * .6, ey + r * .1]], sw * 1.1);
       continue;
     }
+    if (eyes === 'x') {
+      inkLine([[ex - r * .45, ey - r * .45], [ex + r * .45, ey + r * .45]], sw * 1.3, PAL.ink, 'ink', 0);
+      inkLine([[ex + r * .45, ey - r * .45], [ex - r * .45, ey + r * .45]], sw * 1.3, PAL.ink, 'ink', 0);
+      continue;
+    }
     const look = eyes === 'look' ? .38 : 0, px = ex + look * r * (side < 0 ? 1.1 : .7), py = ey + r * .08;
     paint(ellPts(px, py, r * .55, r * .62, 24), { fill: PAL.ink, dots: { col: PAL.pink, r: s * .08, gap: s * .2, from: 0, to: 1 }, ink: null });
     if (eyes === 'star' || side < 0) paint(starPts(px, py, r * .36, .45), { fill: PAL.white, ink: null });
@@ -102,6 +114,11 @@ function crab(cx, cy, s, o = {}) {
   }
   if (pose === 'think') {
     label('?', cx + 5.8 * s, cy - 6.4 * s, s * 3.2, PAL.pink, { weight: 700, rot: .15 });
+    commit();
+  }
+  if (pose === 'alarm' || o.mark === '!') {
+    // between the raised claws when alarmed; otherwise by the head on the side away from the waving claw
+    label('!', cx + (pose === 'alarm' ? 0 : -6.2) * s, cy - (pose === 'alarm' ? 9.6 : 6.0) * s, s * 3.2, PAL.pink, { weight: 700, align: 'center', rot: -.1 });
     commit();
   }
 }
