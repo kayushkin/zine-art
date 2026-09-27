@@ -84,3 +84,115 @@ piece('poster', 1100, 820, () => {
   paint(starPts(880, 700, 28, .2, 4), { fill: PAL.pink, sw: 1.4 }); commit();
   paint(starPts(150, 200, 30, .2, 4), { fill: PAL.cream, sw: 1.4 }); commit();
 }, { seed: 3 });
+
+// ---------- status icons ----------
+// One per session state, shown at 16px in the sidebar and the header in place of bridge-ui's plain dots. Painted
+// big (128px) with heavy ink so they survive being shrunk eight times; zine.css animates the working ones.
+const ST = 128, SC = 64;
+function badgeDisc(fill, dots) {
+  paint(ellPts(SC, SC, 50, 50, 36), { fill, dots, sw: 2.0 });
+}
+piece('status-working', ST, ST, () => {
+  // an orange cog-star: eight blunt points round a pink hub
+  const pts = [];
+  for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r = i % 2 ? 40 : 56; pts.push([SC + Math.cos(a) * r, SC + Math.sin(a) * r]); }
+  paint(pts, { fill: PAL.orange, dots: { col: PAL.pink, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2.0 });
+  commit();
+  paint(ellPts(SC, SC, 17, 17, 20), { fill: PAL.pink, sw: 1.6 });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-thinking', ST, ST, () => {
+  paint(starPts(SC, SC, 58, .3, 4), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 4 }, sw: 2.0 });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-background', ST, ST, () => {
+  badgeDisc(PAL.cream, { col: PAL.orangeLt, r: 3, gap: 8 });
+  commit();
+  paint(starPts(SC, SC, 34, .32, 4, Math.PI / 4), { fill: PAL.orange, sw: 1.6 });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-compacting', ST, ST, () => {
+  // a squashed pink disc with pressure lines above and below
+  paint(ellPts(SC, SC, 52, 30, 30), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8 }, sw: 2.0 });
+  inkLine([[SC - 28, 18], [SC + 28, 18]], 1.8, PAL.ink, 'ink', 0);
+  inkLine([[SC - 28, 110], [SC + 28, 110]], 1.8, PAL.ink, 'ink', 0);
+  commit();
+}, { brushScale: 2.4 });
+piece('status-idle', ST, ST, () => {
+  badgeDisc(PAL.cream, { col: PAL.pinkLt, r: 3.4, gap: 8 });
+  commit();
+  paint(ellPts(SC, SC, 16, 16, 20), { fill: PAL.ink, ink: null });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-done', ST, ST, () => {
+  badgeDisc(PAL.cream, null);
+  commit();
+  inkLine([[34, 66], [56, 90], [98, 36]], 5, PAL.pink, 'ink', 0);
+  inkLine([[34, 66], [56, 90], [98, 36]], 1.6, PAL.ink, 'inkfine', 0);
+  commit();
+}, { brushScale: 2.4 });
+piece('status-aborted', ST, ST, () => {
+  badgeDisc(PAL.cream, null);
+  commit();
+  inkLine([[40, 40], [88, 88]], 3.2, PAL.ink, 'ink', 0);
+  inkLine([[88, 40], [40, 88]], 3.2, PAL.ink, 'ink', 0);
+  commit();
+}, { brushScale: 2.4 });
+piece('status-error', ST, ST, () => {
+  const bolt = [[72, 8], [30, 70], [60, 70], [48, 122], [98, 52], [68, 52], [86, 8]];
+  paint(bolt, { fill: PAL.orange, dots: { col: PAL.pink, r: 3, gap: 8 }, sw: 2.0 });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-paused', ST, ST, () => {
+  badgeDisc(PAL.cream, null);
+  commit();
+  paint(rectPts(42, 36, 14, 56), { fill: PAL.ink, ink: null });
+  paint(rectPts(72, 36, 14, 56), { fill: PAL.ink, ink: null });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-rate-limited', ST, ST, () => {
+  // an hourglass
+  paint([[34, 14], [94, 14], [70, 64], [94, 114], [34, 114], [58, 64]], { fill: PAL.cream, sw: 2.0 });
+  commit();
+  paint([[46, 104], [82, 104], [64, 78]], { fill: PAL.orange, ink: null });
+  paint([[48, 26], [80, 26], [64, 46]], { fill: PAL.orange, ink: null });
+  commit();
+}, { brushScale: 2.4 });
+piece('status-disconnected', ST, ST, () => {
+  // a ring snapped in two, the halves pulled apart
+  for (const [a0, dx] of [[0.35, 6], [Math.PI + 0.35, -6]]) {
+    const arc = []; for (let i = 0; i <= 14; i++) { const a = a0 + i / 14 * (Math.PI - 0.7); arc.push([SC + dx + Math.cos(a) * 44, SC + Math.sin(a) * 44]); }
+    inkLine(arc, 4, PAL.ink, 'ink', .5);
+  }
+  commit();
+}, { brushScale: 2.4 });
+for (const [name, fill, mark] of [['status-asking', PAL.pink, '?'], ['status-permission', PAL.orange, '!']]) {
+  piece(name, ST, ST, () => {
+    // a speech bubble with its tail at the bottom left
+    paint([[30, 86], [18, 120], [58, 96]], { fill, sw: 2.0 });
+    commit();
+    paint(ellPts(SC, 56, 54, 44, 36), { fill, sw: 2.0 });
+    label(mark, SC, 58, 70, PAL.cream, { weight: 900, align: 'center' });
+    commit();
+  }, { brushScale: 2.4 });
+}
+piece('status-empty', ST, ST, () => {
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, b = a + 0.32; inkLine([[SC + Math.cos(a) * 46, SC + Math.sin(a) * 46], [SC + Math.cos(b) * 46, SC + Math.sin(b) * 46]], 3, PAL.ink, 'ink', 0); }
+  commit();
+}, { brushScale: 2.4 });
+
+// the archive button on a sidebar row: a file box with an orange lid, and for an archived row a box with an arrow
+// coming back out of it
+function fileBox() {
+  paint(rectPts(22, 50, 84, 62), { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 3, gap: 8, from: 0, to: 1 }, sw: 2 });
+  commit();
+  paint(rectPts(14, 32, 100, 22), { fill: PAL.orange, sw: 2 });
+  inkLine([[48, 74], [80, 74]], 2.4, PAL.ink, 'ink', 0);
+  commit();
+}
+piece('archive-box', ST, ST, () => fileBox(), { brushScale: 2.4 });
+piece('archive-reopen', ST, ST, () => {
+  fileBox();
+  paint([[64, 2], [36, 30], [54, 30], [54, 60], [74, 60], [74, 30], [92, 30]], { fill: PAL.pink, sw: 2 });
+  commit();
+}, { brushScale: 2.4 });
