@@ -1,0 +1,11 @@
+{
+  "name": "dash-art",
+  "private": true,
+  "description": "The zine theme's pictures: p5.js + p5.brush code, painted to PNG in headless Chrome",
+  "type": "module",
+  "dependencies": {
+    "p5": "2.3.4",
+    "p5.brush": "2.2.3",
+    "playwright-core": "1.63.0"
+  }
+}
