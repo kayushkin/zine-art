@@ -46,6 +46,12 @@ const MOOD_FRAMES = {
     }
     commit();
   } },
+  // the reader is typing: it turns to look down at the text box, a claw cupped to listen
+  noticing: { frames: 6, draw(cx, cy, s, frame) {
+    const lean = [0, .1, .2, .2, .1, 0][frame];
+    crab(cx + lean * s, cy + lean * .5 * s, s, { pose: 'wave', mouth: frame === 3 ? 'smile' : 'o', marks: false, look: .45, lookDown: .8,
+      claws: [[-6.4, 1.6, .25, .9], [5.4, -4.0 + lean, .3, -2.3]] });
+  } },
   // something went wrong: claws flailing, eyes crossed out, shaking side to side
   trouble: { frames: 4, draw(cx, cy, s, frame) {
     const claws = [
@@ -55,34 +61,82 @@ const MOOD_FRAMES = {
     crab(cx + [0, -.3, 0, .3][frame] * s, cy + 1.2 * s, s, { pose: 'alarm', eyes: 'x', mouth: 'o', claws });
   } },
 };
-// the message the reader sent, folded into a small speech bubble for the crab to catch
-function messageBubble(x, y, r, sw) {
-  paint([[x - r * .5, y + r * .45], [x - r * .95, y + r * 1.05], [x - r * .05, y + r * .55]], { fill: PAL.cream, sw });
-  commit();
-  paint(ellPts(x, y, r, r * .72, 22), { fill: PAL.cream, sw });
-  for (const [dy, w] of [[-.22, .55], [.05, .6], [.32, .35]]) inkLine([[x - r * .55, y + dy * r], [x - r * .55 + w * r * 1.9, y + dy * r]], sw * .7, PAL.ink, 'inkfine', 0);
-  commit();
-}
-// the catch, played once when a message reaches the crab: claws up, the bubble lands between them, the claws close
-// on it, the crab holds it up delighted, reads it, and puts it away
-const CATCH = { frames: 6, draw(cx, cy, s, frame) {
-  const sw = clamp(s / 17, .5, 2.2);
-  const at = [[8.6, 3.2, 1.3], [0, -9.4, 1.6], [0, -9.0, 1.5], [0, -10.0, 1.6], [0, -3.0, 1.2], null][frame];
-  const claws = [
-    [[-7.0, -4.6, .8, .35], [7.0, -4.6, .8, -.35]], [[-5.0, -8.0, .8, .6], [5.0, -8.0, .8, -.6]],
-    [[-2.8, -8.4, .05, 1.0], [2.8, -8.4, .05, -1.0]], [[-2.9, -9.4, .1, .9], [2.9, -9.4, .1, -.9]],
-    [[-3.2, -1.6, .1, 1.4], [3.2, -1.6, .1, -1.4]], [[-6.0, 2.4, .1, 1.2], [6.0, 2.4, .1, -1.2]]][frame];
-  // behind the claws while it is being caught, in front once it is held
-  if (at && frame < 2) messageBubble(cx + at[0] * s, cy + at[1] * s, at[2] * s, sw);
-  crab(cx, cy + (frame === 2 ? .35 * s : 0), s, {
-    pose: 'cheer', claws, mouth: ['o', 'o', 'grin', 'grin', 'smile', 'grin'][frame],
-    eyes: frame === 3 ? 'star' : 'open', look: frame === 0 ? .3 : 0,
-  });
-  if (at && frame >= 2) messageBubble(cx + at[0] * s, cy + at[1] * s, at[2] * s, sw);
-} };
 for (const [mood, { frames, draw }] of Object.entries(MOOD_FRAMES))
   piece(`crab-mini-${mood}-frames`, MINI.w, MINI.h, frame => draw(110, 120, 9.5, frame), { brushScale: MINI.brushScale, frames });
-piece('crab-mini-catch-frames', MINI.w, MINI.h, frame => CATCH.draw(110, 122, 9.5, frame), { brushScale: MINI.brushScale, frames: CATCH.frames });
+// The conductor: the orchestrator, docked at the foot of the chat sidebar. No headset — a bow tie, and a baton in the
+// right claw. One strip per `data-state` of bridge-ui's `.bc-conductor`, and `glance` for the pointer over it.
+function baton(cx, cy, s, [tipX, tipY], angle, length = 4.2) {
+  const x0 = cx + tipX * s, y0 = cy + tipY * s, x1 = x0 + Math.cos(angle) * length * s, y1 = y0 + Math.sin(angle) * length * s;
+  inkLine([[x0, y0], [x1, y1]], clamp(s / 17, .5, 2.2) * 1.6, PAL.ink, 'ink', 0);
+  commit();
+  paint(ellPts(x1, y1, .42 * s, .42 * s, 12), { fill: PAL.white, sw: clamp(s / 17, .5, 2.2) * .7 });
+  commit();
+  return [x1, y1];
+}
+const conductor = (cx, cy, s, o) => crab(cx, cy, s, { headset: false, bowtie: true, marks: false, ...o });
+const CONDUCTOR_FRAMES = {
+  // keeping the work moving: a four-beat pattern with the baton, the free claw shaping it, notes drifting up
+  conducting: { frames: 8, draw(cx, cy, s, frame) {
+    const tip = [[6.2, -1.0], [5.6, 1.2], [4.4, .2], [3.8, -.8], [6.8, 0], [7.4, -1.0], [7.0, -3.2], [6.4, -4.6]][frame];
+    const angle = [-.9, -.5, -1.4, -1.8, -.7, -.5, -1.2, -1.5][frame];
+    conductor(cx, cy + (frame % 2) * .15 * s, s, { mouth: 'smile', look: -.25,
+      claws: [[-6.4, [1.0, .6, .2, 0, .2, .6, 1.0, 1.2][frame], .4, .9], [tip[0], tip[1], .15, -.4]] });
+    baton(cx, cy, s, tip, angle);
+    const t = frame / 8;
+    label('♪', cx + (8.0 + .8 * t) * s, cy - (4.4 + 4.0 * t) * s, s * (2.4 + .8 * t), frame % 2 ? PAL.pink : PAL.ink, { weight: 700, font: '"DejaVu Sans", sans-serif' });
+    commit();
+  } },
+  // a run in flight: both claws going, big fast sweeps
+  busy: { frames: 6, draw(cx, cy, s, frame) {
+    const tip = [[7.6, -4.6], [5.0, 1.6], [7.8, -.4], [7.2, -4.2], [4.8, 1.2], [8.0, -1.0]][frame];
+    const angle = [-1.6, -.3, -1.0, -1.5, -.2, -.8][frame];
+    conductor(cx, cy - (frame % 3 === 0 ? .25 : 0) * s, s, { mouth: 'flat', look: 0,
+      claws: [[[-7.6, -4.4, -5.0][frame % 3], [-4.2, 1.4, -.6][frame % 3], .5, .8], [tip[0], tip[1], .15, -.4]] });
+    baton(cx, cy, s, tip, angle);
+  } },
+  // something needs you: it turns to you, baton up with a pink pennant, beckoning
+  alert: { frames: 6, draw(cx, cy, s, frame) {
+    cx += .5 * s; // the beckoning claw reaches further left than the others
+    const wave = [[-7.0, -4.6, .55, .35], [-7.6, -3.6, .55, .1], [-7.8, -2.4, .5, -.1], [-7.6, -3.6, .55, .1], [-7.0, -4.6, .55, .35], [-6.2, -5.4, .6, .6]][frame];
+    conductor(cx, cy, s, { mouth: 'o', look: 0, claws: [wave, [5.6, -4.2, .15, -.4]] });
+    const [x1, y1] = baton(cx, cy, s, [5.6, -4.2], -1.45, 4.6);
+    const flap = [0, .5, 1, .5, 0, -.5][frame] * s;
+    paint([[x1, y1 + .4 * s], [x1 + 3.2 * s, y1 + 1.2 * s + flap], [x1, y1 + 2.4 * s]], { fill: PAL.pink, sw: clamp(s / 17, .5, 2.2) });
+    commit();
+    label('!', cx - 6.4 * s, cy - (7.4 + [0, .2, .4, .2, 0, -.2][frame]) * s, s * 3, PAL.pink, { weight: 700, align: 'center' });
+    commit();
+  } },
+  // the last run failed: the baton snapped, claws up
+  trouble: { frames: 4, draw(cx, cy, s, frame) {
+    cx += .5 * s; // the flailing claws reach further left than the others
+    const claws = [[[-7.4, -5.2, .7, .5], [7.4, -5.2, .7, -.5]], [[-7.8, -3.8, .3, .8], [7.0, -6.0, .8, -.3]],
+      [[-7.4, -5.2, .7, .5], [7.4, -5.2, .7, -.5]], [[-7.0, -6.0, .8, .3], [7.8, -3.8, .3, -.8]]][frame];
+    conductor(cx + [0, -.3, 0, .3][frame] * s, cy + 1.2 * s, s, { eyes: 'x', mouth: 'o', claws });
+    const sw = clamp(s / 17, .5, 2.2) * 1.6, spin = frame * .9;
+    inkLine([[cx + 5.5 * s, cy + 3.8 * s], [cx + (5.5 + 2.8 * Math.cos(spin)) * s, cy + (3.8 + 2.8 * Math.sin(spin)) * s]], sw, PAL.ink, 'ink', 0);
+    inkLine([[cx - 5.0 * s, cy + 4.4 * s], [cx + (-5.0 + 2.6 * Math.cos(-spin)) * s, cy + (4.4 + 2.6 * Math.sin(-spin)) * s]], sw, PAL.ink, 'ink', 0);
+    commit();
+  } },
+  // autonomous mode off: dozing on its feet, the baton drooping
+  resting: { frames: 6, draw(cx, cy, s, frame) {
+    conductor(cx, cy - [0, .1, .2, .2, .1, 0][frame] * s, s, { eyes: 'closed', mouth: 'o', claws: [[-6.0, 2.4, .1, 1.2], [6.0, 2.4, .15, -1.2]] });
+    baton(cx, cy, s, [6.0, 2.4], .9 + [0, .05, .1, .1, .05, 0][frame], 3.6);
+    for (let k = 0; k < 3; k++) {
+      const t = (frame / 6 + k / 3) % 1;
+      label(t > .6 ? 'Z' : 'z', cx + (4.6 + 2.6 * t) * s, cy - (5.6 + 4.0 * t) * s, s * (1.3 + 1.3 * t), k % 2 ? PAL.pink : PAL.ink, { weight: 700 });
+    }
+    commit();
+  } },
+  // the pointer is over it: it turns to you and raises the baton, as if to say "yes?"
+  glance: { frames: 6, draw(cx, cy, s, frame) {
+    const tip = [[6.2, -1.0], [6.4, -3.0], [6.2, -5.0], [6.0, -5.6], [6.2, -5.0], [6.4, -3.0]][frame];
+    conductor(cx, cy - [0, .1, .25, .3, .25, .1][frame] * s, s, { mouth: 'grin', look: 0, eyes: frame === 3 ? 'star' : 'open',
+      claws: [[-6.4, [1.6, 1.0, .4, .2, .4, 1.0][frame], .3, .9], [tip[0], tip[1], .15, -.4]] });
+    baton(cx, cy, s, tip, -1.2 - frame * .05);
+  } },
+};
+for (const [state, { frames, draw }] of Object.entries(CONDUCTOR_FRAMES))
+  piece(`conductor-${state}-frames`, MINI.w, MINI.h, frame => draw(96, 126, 10.5, frame), { brushScale: MINI.brushScale, frames });
 // the page-loading crab: the thinking mood, big
 piece('crab-think-frames', 620, 560, frame => MOOD_FRAMES.thinking.draw(270, 360, 30, frame), { frames: MOOD_FRAMES.thinking.frames });
 // an empty chat: the crab waving hello under a "hi!" bubble, the bubble and crab laid out as the two layers were

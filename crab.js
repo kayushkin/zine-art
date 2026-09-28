@@ -13,6 +13,8 @@
 //   o.legSwing: how far, in s, the feet swing; alternate legs swing opposite ways (a scuttle)
 //   o.speed:    how long the run pose's speed lines are, 1 as drawn
 //   o.look:     how far the pupils glance sideways, in place of the eyes setting's
+//   o.lookDown: how far the pupils glance down, 0 to 1
+//   o.bowtie:   a pink bow tie under the mouth (the conductor wears one, with no headset)
 //   o.marks:    false to leave off the pose's marks by the head (the "?", the z's, the "!"), to draw them yourself
 function crab(cx, cy, s, o = {}) {
   const P = (x, y) => [cx + x * s, cy + y * s];
@@ -99,7 +101,7 @@ function crab(cx, cy, s, o = {}) {
       inkLine([[ex + r * .45, ey - r * .45], [ex - r * .45, ey + r * .45]], sw * 1.3, PAL.ink, 'ink', 0);
       continue;
     }
-    const look = o.look ?? (eyes === 'look' ? .38 : 0), px = ex + look * r * (side < 0 ? 1.1 : .7), py = ey + r * .08;
+    const look = o.look ?? (eyes === 'look' ? .38 : 0), px = ex + look * r * (side < 0 ? 1.1 : .7), py = ey + r * (.08 + (o.lookDown ?? 0) * .45);
     paint(ellPts(px, py, r * .55, r * .62, 24), { fill: PAL.ink, dots: { col: PAL.pink, r: s * .08, gap: s * .2, from: 0, to: 1 }, ink: null });
     if (eyes === 'star' || side < 0) paint(starPts(px, py, r * .36, .45), { fill: PAL.white, ink: null });
     else paint(ellPts(px - r * .18, py - r * .2, r * .16, r * .16, 12), { fill: PAL.white, ink: null });
@@ -107,6 +109,12 @@ function crab(cx, cy, s, o = {}) {
     inkLine([[ex + side * r * .75, ey - r * .55], [ex + side * r * 1.15, ey - r * .9]], sw * .9);
   }
   commit();
+
+  if (o.bowtie) {
+    for (const side of [-1, 1]) paint(pts([[side * .2, 2.4], [side * 2.0, 1.5], [side * 2.0, 3.3]]), { fill: PAL.pink, sw: sw * .9 });
+    paint(ellPts(cx, cy + 2.4 * s, .55 * s, .55 * s, 12), { fill: PAL.pinkDk, sw: sw * .8 });
+    commit();
+  }
 
   // headset: ear cups at the shell's shoulders and a boom mic sweeping toward the mouth
   if (o.headset !== false) {
