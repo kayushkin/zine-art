@@ -196,3 +196,7 @@ piece('archive-reopen', ST, ST, () => {
   paint([[64, 2], [36, 30], [54, 30], [54, 60], [74, 60], [74, 30], [92, 30]], { fill: PAL.pink, sw: 2 });
   commit();
 }, { brushScale: 2.4 });
+
+// ---------- avatars ----------
+// discord-signup-store's Event-Manager bot. Discord crops avatars to a circle, so the crab sits inside it on paper.
+piece('avatar-event-manager', 512, 512, () => crab(252, 290, 21, { pose: 'wave' }), { bg: true });
