@@ -123,6 +123,9 @@ function defineBrushes() {
 // ---------- pieces ----------
 // Each picture registers itself: piece(name, width, height, fn). fn paints in pixel space, origin top-left.
 // `bg: true` paints the paper first; otherwise the PNG keeps a transparent background, for stickers.
+// `frames: n` makes an animation: fn(frame) is called for frame 0..n-1, each painted in its own width×height cell of
+// one strip, left to right, which CSS plays with steps(n). Every frame starts from the same seed, so the hand wobble
+// stays put and only what fn moves moves.
 const PIECES = {};
 function piece(name, w, h, fn, o = {}) { PIECES[name] = { w, h, fn, ...o }; }
 
@@ -133,17 +136,20 @@ function setup() {
   CURRENT = PIECES[name];
   if (!CURRENT) throw new Error(`no piece named ${name}; known: ${Object.keys(PIECES).join(', ')}`);
   W = CURRENT.w; H = CURRENT.h;
-  createCanvas(W, H, WEBGL); pixelDensity(1); noLoop();
+  createCanvas(W * (CURRENT.frames ?? 1), H, WEBGL); pixelDensity(1); noLoop();
   brush.scaleBrushes(CURRENT.brushScale ?? 1.4); defineBrushes();
   dotG = createGraphics(W, H); dotG.pixelDensity(1);
 }
 function draw() {
   clear();
-  push(); translate(-W / 2, -H / 2);
-  randomSeed(CURRENT.seed ?? 7); noiseSeed(7);
+  const frames = CURRENT.frames ?? 1;
   if (CURRENT.bg) { background(PAL.paper); }
-  CURRENT.fn();
-  commit();
-  pop();
+  for (let frame = 0; frame < frames; frame++) {
+    push(); translate(-W * frames / 2 + W * frame, -H / 2);
+    randomSeed(CURRENT.seed ?? 7); noiseSeed(7);
+    CURRENT.fn(frame);
+    commit();
+    pop();
+  }
   window.painted = true;
 }

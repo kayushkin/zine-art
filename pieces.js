@@ -92,32 +92,62 @@ const ST = 128, SC = 64;
 function badgeDisc(fill, dots) {
   paint(ellPts(SC, SC, 50, 50, 36), { fill, dots, sw: 2.0 });
 }
-piece('status-working', ST, ST, () => {
-  // an orange cog-star: eight blunt points round a pink hub
+// The states where something is happening are animations: a strip of `frames` cells that zine.css plays with
+// steps(), so each is drawn frame by frame rather than one picture turned by CSS. Frame 0 is the still that shows
+// when the reader asks for reduced motion, so it should read on its own.
+function cogPts(cx, cy, teeth, outer, inner, turn) {
   const pts = [];
-  for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r = i % 2 ? 40 : 56; pts.push([SC + Math.cos(a) * r, SC + Math.sin(a) * r]); }
-  paint(pts, { fill: PAL.orange, dots: { col: PAL.pink, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2.0 });
+  for (let i = 0; i < teeth * 4; i++) {
+    // flat-topped teeth: two points out, two points in, per tooth
+    const a = turn + i / (teeth * 4) * TAU, r = (i % 4 === 1 || i % 4 === 2) ? outer : inner;
+    pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+  }
+  return pts;
+}
+// a tool call: two cogs meshing, turning one tooth each per loop, the big one clockwise
+piece('status-working-frames', ST, ST, frame => {
+  const t = frame / 6;
+  paint(cogPts(90, 38, 6, 28, 20, -t * TAU / 6 + 0.26), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8 }, sw: 2.0 });
   commit();
-  paint(ellPts(SC, SC, 17, 17, 20), { fill: PAL.pink, sw: 1.6 });
+  paint(ellPts(90, 38, 8, 8, 16), { fill: PAL.cream, sw: 1.4 });
   commit();
-}, { brushScale: 2.4 });
-piece('status-thinking', ST, ST, () => {
-  paint(starPts(SC, SC, 58, .3, 4), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 4 }, sw: 2.0 });
+  paint(cogPts(54, 76, 8, 43, 32, t * TAU / 8), { fill: PAL.orange, dots: { col: PAL.pink, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2.0 });
   commit();
-}, { brushScale: 2.4 });
-piece('status-background', ST, ST, () => {
-  badgeDisc(PAL.cream, { col: PAL.orangeLt, r: 3, gap: 8 });
+  paint(ellPts(54, 76, 14, 14, 20), { fill: PAL.pink, sw: 1.6 });
   commit();
-  paint(starPts(SC, SC, 34, .32, 4, Math.PI / 4), { fill: PAL.orange, sw: 1.6 });
+}, { brushScale: 2.4, frames: 6 });
+// waiting on the model: a thought bubble whose three dots rise one after another, then rest
+piece('status-thinking-frames', ST, ST, frame => {
+  paint(ellPts(22, 116, 8, 8, 14), { fill: PAL.pink, sw: 1.6 });
+  paint(ellPts(64, 58, 60, 46, 40), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2.0 });
   commit();
-}, { brushScale: 2.4 });
-piece('status-compacting', ST, ST, () => {
-  // a squashed pink disc with pressure lines above and below
-  paint(ellPts(SC, SC, 52, 30, 30), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8 }, sw: 2.0 });
-  inkLine([[SC - 28, 18], [SC + 28, 18]], 1.8, PAL.ink, 'ink', 0);
-  inkLine([[SC - 28, 110], [SC + 28, 110]], 1.8, PAL.ink, 'ink', 0);
+  for (let i = 0; i < 3; i++) {
+    const lift = clamp(1 - Math.abs(frame - 2 * i) / 1.5);
+    const r = 11 + 3 * lift;
+    paint(ellPts(30 + i * 34, 62 - 16 * lift, r, r, 18), { fill: PAL.cream, sw: 1.6 });
+  }
   commit();
-}, { brushScale: 2.4 });
+}, { brushScale: 2.4, frames: 8 });
+// the turn is over but subagents or commands it started still run: an orange ball circling a quiet disc
+piece('status-background-frames', ST, ST, frame => {
+  const a = frame / 8 * TAU - Math.PI / 2;
+  paint(ellPts(SC, SC, 40, 40, 32), { fill: PAL.cream, dots: { col: PAL.orangeLt, r: 3, gap: 8 }, sw: 2.0 });
+  commit();
+  paint(starPts(SC, SC, 22, .34, 4, Math.PI / 4), { fill: PAL.pink, sw: 1.4 });
+  commit();
+  paint(ellPts(SC + Math.cos(a) * 46, SC + Math.sin(a) * 46, 13, 13, 18), { fill: PAL.orange, sw: 1.8 });
+  commit();
+}, { brushScale: 2.4, frames: 8 });
+// compacting: two plates press a pink disc flat and let it go
+piece('status-compacting-frames', ST, ST, frame => {
+  const squash = [0, .35, .7, 1, .7, .35][frame];
+  const rx = 42 + 16 * squash, ry = 42 - 22 * squash;
+  paint(ellPts(SC, SC, rx, ry, 32), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 3, gap: 8 }, sw: 2.0 });
+  commit();
+  paint(rectPts(SC - 38, SC - ry - 16, 76, 12), { fill: PAL.ink, ink: null });
+  paint(rectPts(SC - 38, SC + ry + 4, 76, 12), { fill: PAL.ink, ink: null });
+  commit();
+}, { brushScale: 2.4, frames: 6 });
 piece('status-idle', ST, ST, () => {
   badgeDisc(PAL.cream, { col: PAL.pinkLt, r: 3.4, gap: 8 });
   commit();
@@ -150,14 +180,20 @@ piece('status-paused', ST, ST, () => {
   paint(rectPts(72, 36, 14, 56), { fill: PAL.ink, ink: null });
   commit();
 }, { brushScale: 2.4 });
-piece('status-rate-limited', ST, ST, () => {
-  // an hourglass
-  paint([[34, 14], [94, 14], [70, 64], [94, 114], [34, 114], [58, 64]], { fill: PAL.cream, sw: 2.0 });
+// rate limited, waiting for the limit to reset: an hourglass that drains, then turns over
+piece('status-rate-limited-frames', ST, ST, frame => {
+  const turned = frame === 6, left = turned ? 1 : 1 - frame / 5;
+  const glass = [[34, 14], [94, 14], [70, 64], [94, 114], [34, 114], [58, 64]];
+  const turn = pts => turned ? rotPts(pts, SC, SC, Math.PI / 2) : pts;
+  paint(turn(glass), { fill: PAL.cream, sw: 2.0 });
   commit();
-  paint([[46, 104], [82, 104], [64, 78]], { fill: PAL.orange, ink: null });
-  paint([[48, 26], [80, 26], [64, 46]], { fill: PAL.orange, ink: null });
+  // sand is a triangle in each bulb, the top one shrinking toward the neck and the bottom one filling up
+  const top = 46 - 20 * left, bottom = 104 - 26 * (1 - left);
+  if (left > 0) paint(turn([[64 - 16 * left, top], [64 + 16 * left, top], [64, 64]]), { fill: PAL.orange, ink: null });
+  if (left < 1) paint(turn([[64 - 18 * (1 - left) - 10, 104], [64 + 18 * (1 - left) + 10, 104], [64, bottom]]), { fill: PAL.orange, ink: null });
+  if (!turned && left > 0) paint(turn(rectPts(62, 64, 4, 38)), { fill: PAL.orange, ink: null });
   commit();
-}, { brushScale: 2.4 });
+}, { brushScale: 2.4, frames: 7 });
 piece('status-disconnected', ST, ST, () => {
   // a ring snapped in two, the halves pulled apart
   for (const [a0, dx] of [[0.35, 6], [Math.PI + 0.35, -6]]) {
@@ -166,15 +202,21 @@ piece('status-disconnected', ST, ST, () => {
   }
   commit();
 }, { brushScale: 2.4 });
-for (const [name, fill, mark] of [['status-asking', PAL.pink, '?'], ['status-permission', PAL.orange, '!']]) {
-  piece(name, ST, ST, () => {
-    // a speech bubble with its tail at the bottom left
-    paint([[30, 86], [18, 120], [58, 96]], { fill, sw: 2.0 });
+// waiting on the reader: the speech bubble hops, squashing as it lands, to ask for attention
+// [lift, width, height] per frame, as a share of the bubble at rest, which is drawn at 0.86 so the top of the hop fits
+const HOP = [[0, 1, 1], [0, 1.12, .86], [-10, .92, 1.1], [-18, .96, 1.04], [-8, 1, 1], [0, 1.1, .9]];
+for (const [name, fill, mark] of [['status-asking-frames', PAL.pink, '?'], ['status-permission-frames', PAL.orange, '!']]) {
+  piece(name, ST, ST, frame => {
+    // squash and stretch about the middle of the bubble's foot, then lift
+    const [dy, width, height] = HOP[frame], sx = width * .86, sy = height * .86;
+    const place = pts => pts.map(([x, y]) => [SC + (x - SC) * sx, 122 + (y - 122) * sy + dy]);
+    paint(place([[30, 86], [18, 120], [58, 96]]), { fill, sw: 2.0 });
     commit();
-    paint(ellPts(SC, 56, 54, 44, 36), { fill, sw: 2.0 });
-    label(mark, SC, 58, 70, PAL.cream, { weight: 900, align: 'center' });
+    paint(place(ellPts(SC, 56, 54, 44, 36)), { fill, sw: 2.0 });
+    const [[, markY]] = place([[SC, 58]]);
+    label(mark, SC, markY, 80 * sy, PAL.cream, { weight: 900, align: 'center' });
     commit();
-  }, { brushScale: 2.4 });
+  }, { brushScale: 2.4, frames: HOP.length });
 }
 piece('status-empty', ST, ST, () => {
   for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, b = a + 0.32; inkLine([[SC + Math.cos(a) * 46, SC + Math.sin(a) * 46], [SC + Math.cos(b) * 46, SC + Math.sin(b) * 46]], 3, PAL.ink, 'ink', 0); }
