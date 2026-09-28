@@ -12,6 +12,96 @@ piece('crab-mini-working', 220, 200, () => crab(118, 124, 11, { pose: 'run', mou
 piece('crab-mini-waiting', 220, 200, () => crab(116, 128, 11, { pose: 'wave', mouth: 'o', mark: '!' }), { brushScale: 1.1 });
 piece('crab-mini-resting', 220, 200, () => crab(100, 132, 11, { pose: 'sleep', eyes: 'closed' }), { brushScale: 1.1 });
 piece('crab-mini-trouble', 220, 220, () => crab(110, 150, 11, { pose: 'alarm', eyes: 'x', mouth: 'o' }), { brushScale: 1.1 });
+// The same moods as animations, frame by frame (`frames: n`, see core.js), in one 220×200 cell each so zine.css
+// treats them alike. Each takes the crab's centre and unit, so the loading and empty-chat crabs reuse them at size.
+const MINI = { w: 220, h: 200, brushScale: 1.1 };
+function thoughtDots(cx, cy, s, count) {
+  // rising from the head to the upper right, each bigger than the last
+  [[5.2, -4.8, .5], [6.4, -6.4, .75], [7.4, -8.4, 1.05]].slice(0, count)
+    .forEach(([x, y, r]) => paint(ellPts(cx + x * s, cy + y * s, r * s, r * s, 16), { fill: PAL.cream, sw: clamp(s / 17, .5, 2.2) }));
+  commit();
+}
+const MOOD_FRAMES = {
+  // a claw tapping the chin while a thought forms, three dots rising one at a time
+  thinking: { frames: 6, draw(cx, cy, s, frame) {
+    const tap = frame % 2;
+    crab(cx, cy, s, { pose: 'think', eyes: 'look', mouth: 'flat', marks: false, look: [.38, .38, .2, .38, .5, .38][frame],
+      claws: [[-6.4, 1.6, .25, .9], [3.6, 2.6 - tap * .7, .15 + tap * .25, -2.2]] });
+    thoughtDots(cx, cy, s, [3, 3, 0, 1, 2, 3][frame]);
+  } },
+  // scuttling: legs in a tripod gait, claws pumping, the body bobbing, speed lines behind
+  working: { frames: 4, draw(cx, cy, s, frame) {
+    const claws = [
+      [[-6.8, 3.2, .2, 1.4], [7.4, -2.6, .6, -.1]], [[-7.2, 1.6, .5, 1.1], [7.0, -.6, .2, .2]],
+      [[-6.6, 3.6, .2, 1.5], [7.6, -3.4, .65, -.25]], [[-7.0, 2.0, .5, 1.2], [7.2, -1.0, .25, .1]]][frame];
+    crab(cx, cy - (frame % 2) * .3 * s, s, { pose: 'run', mouth: 'grin', claws, legSwing: frame % 2 ? -.7 : .7, speed: [1, .7, 1.15, .75][frame] });
+  } },
+  // parked on the reader: waving hard, with a "!" bobbing on the other side
+  waiting: { frames: 6, draw(cx, cy, s, frame) {
+    const wave = [[7.0, -4.6, .55, -.35], [7.6, -3.6, .55, -.1], [7.8, -2.4, .5, .1], [7.6, -3.6, .55, -.1], [7.0, -4.6, .55, -.35], [6.2, -5.4, .6, -.6]][frame];
+    crab(cx, cy, s, { pose: 'wave', mouth: 'o', marks: false, claws: [[-6.4, 1.6, .25, .9], wave] });
+    label('!', cx - 6.2 * s, cy - (6.0 + [0, .2, .4, .2, 0, -.2][frame]) * s, s * 3.2, PAL.pink, { weight: 700, align: 'center', rot: -.1 });
+    commit();
+  } },
+  // asleep: breathing, and z's drifting up and growing as they go
+  resting: { frames: 6, draw(cx, cy, s, frame) {
+    crab(cx, cy - [0, .1, .2, .2, .1, 0][frame] * s, s, { pose: 'sleep', eyes: 'closed', marks: false });
+    for (let k = 0; k < 3; k++) {
+      const t = (frame / 6 + k / 3) % 1;
+      label(t > .6 ? 'Z' : 'z', cx + (5.2 + 2.6 * t) * s, cy - (5.2 + 4.0 * t) * s, s * (1.3 + 1.3 * t), k % 2 ? PAL.pink : PAL.ink, { weight: 700 });
+    }
+    commit();
+  } },
+  // something went wrong: claws flailing, eyes crossed out, shaking side to side
+  trouble: { frames: 4, draw(cx, cy, s, frame) {
+    const claws = [
+      [[-7.4, -5.2, .7, .5], [7.4, -5.2, .7, -.5]], [[-7.8, -3.8, .3, .8], [7.0, -6.0, .8, -.3]],
+      [[-7.4, -5.2, .7, .5], [7.4, -5.2, .7, -.5]], [[-7.0, -6.0, .8, .3], [7.8, -3.8, .3, -.8]]][frame];
+    // lower than the others, so the "!" above the raised claws stays in the cell
+    crab(cx + [0, -.3, 0, .3][frame] * s, cy + 1.2 * s, s, { pose: 'alarm', eyes: 'x', mouth: 'o', claws });
+  } },
+};
+// the message the reader sent, folded into a small speech bubble for the crab to catch
+function messageBubble(x, y, r, sw) {
+  paint([[x - r * .5, y + r * .45], [x - r * .95, y + r * 1.05], [x - r * .05, y + r * .55]], { fill: PAL.cream, sw });
+  commit();
+  paint(ellPts(x, y, r, r * .72, 22), { fill: PAL.cream, sw });
+  for (const [dy, w] of [[-.22, .55], [.05, .6], [.32, .35]]) inkLine([[x - r * .55, y + dy * r], [x - r * .55 + w * r * 1.9, y + dy * r]], sw * .7, PAL.ink, 'inkfine', 0);
+  commit();
+}
+// the catch, played once when a message reaches the crab: claws up, the bubble lands between them, the claws close
+// on it, the crab holds it up delighted, reads it, and puts it away
+const CATCH = { frames: 6, draw(cx, cy, s, frame) {
+  const sw = clamp(s / 17, .5, 2.2);
+  const at = [[8.6, 3.2, 1.3], [0, -9.4, 1.6], [0, -9.0, 1.5], [0, -10.0, 1.6], [0, -3.0, 1.2], null][frame];
+  const claws = [
+    [[-7.0, -4.6, .8, .35], [7.0, -4.6, .8, -.35]], [[-5.0, -8.0, .8, .6], [5.0, -8.0, .8, -.6]],
+    [[-2.8, -8.4, .05, 1.0], [2.8, -8.4, .05, -1.0]], [[-2.9, -9.4, .1, .9], [2.9, -9.4, .1, -.9]],
+    [[-3.2, -1.6, .1, 1.4], [3.2, -1.6, .1, -1.4]], [[-6.0, 2.4, .1, 1.2], [6.0, 2.4, .1, -1.2]]][frame];
+  // behind the claws while it is being caught, in front once it is held
+  if (at && frame < 2) messageBubble(cx + at[0] * s, cy + at[1] * s, at[2] * s, sw);
+  crab(cx, cy + (frame === 2 ? .35 * s : 0), s, {
+    pose: 'cheer', claws, mouth: ['o', 'o', 'grin', 'grin', 'smile', 'grin'][frame],
+    eyes: frame === 3 ? 'star' : 'open', look: frame === 0 ? .3 : 0,
+  });
+  if (at && frame >= 2) messageBubble(cx + at[0] * s, cy + at[1] * s, at[2] * s, sw);
+} };
+for (const [mood, { frames, draw }] of Object.entries(MOOD_FRAMES))
+  piece(`crab-mini-${mood}-frames`, MINI.w, MINI.h, frame => draw(110, 120, 9.5, frame), { brushScale: MINI.brushScale, frames });
+piece('crab-mini-catch-frames', MINI.w, MINI.h, frame => CATCH.draw(110, 122, 9.5, frame), { brushScale: MINI.brushScale, frames: CATCH.frames });
+// the page-loading crab: the thinking mood, big
+piece('crab-think-frames', 620, 560, frame => MOOD_FRAMES.thinking.draw(270, 360, 30, frame), { frames: MOOD_FRAMES.thinking.frames });
+// an empty chat: the crab waving hello under a "hi!" bubble, the bubble and crab laid out as the two layers were
+piece('crab-hello-frames', 620, 560, frame => {
+  const k = .785, ox = 384, bx = x => ox + x * k, by = y => y * k;
+  paint([[bx(118), by(150)], [bx(62), by(222)], [bx(170), by(150)]], { fill: PAL.cream, sw: 2 });
+  commit();
+  paint(puffPts(bx(150), by(95), 128 * k, 78 * k, 9, .1, 0, 5), { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 2.4, gap: 7, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2 });
+  label('hi!', bx(150), by(96) - [0, 2, 4, 2, 0, -2][frame], 64 * k, PAL.ink, { weight: 700, align: 'center', rot: -.06 });
+  commit();
+  const wave = [[7.0, -4.6, .55, -.35], [7.6, -3.6, .55, -.1], [7.8, -2.4, .5, .1], [7.6, -3.6, .55, -.1], [7.0, -4.6, .55, -.35], [6.2, -5.4, .6, -.6]][frame];
+  crab(261, 396, 23.4, { pose: 'wave', claws: [[-6.4, 1.6, .25, .9], wave], eyes: frame === 4 ? 'closed' : 'open' });
+}, { frames: 6 });
 // the brand mark in the top bar: drawn small, so the ink is heavier for its size
 piece('crab-mark', 200, 190, () => crab(98, 118, 10, { pose: 'wave' }), { brushScale: 1.1 });
 

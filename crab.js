@@ -8,6 +8,12 @@
 //   o.eyes:  'open' | 'star' (a star in both) | 'closed' | 'look' (glancing to the side, as in the reference) | 'x'
 //   o.mouth: 'grin' | 'o' | 'smile' | 'flat'
 //   o.headset: false to leave it off
+// For animation frames, which move one pose a little at a time:
+//   o.claws:    [left, right], each [tipX, tipY, open, ang] in units of s, in place of the pose's claws
+//   o.legSwing: how far, in s, the feet swing; alternate legs swing opposite ways (a scuttle)
+//   o.speed:    how long the run pose's speed lines are, 1 as drawn
+//   o.look:     how far the pupils glance sideways, in place of the eyes setting's
+//   o.marks:    false to leave off the pose's marks by the head (the "?", the z's, the "!"), to draw them yourself
 function crab(cx, cy, s, o = {}) {
   const P = (x, y) => [cx + x * s, cy + y * s];
   const pts = arr => arr.map(([x, y]) => P(x, y));
@@ -16,7 +22,8 @@ function crab(cx, cy, s, o = {}) {
   // legs first, so the shell covers their roots: three a side, bent at the knee
   for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
     const rootX = side * (2.4 + i * 1.1), rootY = 1.6 + i * .25;
-    const kneeX = side * (4.6 + i * 1.0), kneeY = 2.6 + i * .6, footX = side * (5.4 + i * 1.1), footY = 4.6 + i * .4;
+    const swing = (o.legSwing ?? 0) * ((i + (side > 0 ? 1 : 0)) % 2 ? 1 : -1);
+    const kneeX = side * (4.6 + i * 1.0) + swing * .5, kneeY = 2.6 + i * .6, footX = side * (5.4 + i * 1.1) + swing, footY = 4.6 + i * .4;
     leg(pts([[rootX, rootY], [kneeX, kneeY], [footX, footY]]), s * .9, sw);
   }
 
@@ -26,12 +33,16 @@ function crab(cx, cy, s, o = {}) {
     leg(pts([root, elbow, [tipX, tipY + .9]]), s * 1.05, sw);
     pincer(P(tipX, tipY), s * 1.8, side, open, ang, sw);
   };
-  if (pose === 'wave') { claw(-1, -6.4, 1.6, .25, .9); claw(1, 7.0, -4.6, .55, -.35); }
+  if (o.claws) {
+    if (pose === 'run') for (const [y, len] of [[-1.6, 3.2], [0.2, 4.2], [2.0, 2.8]]) inkLine(pts([[-6.2, y], [-6.2 - len * (o.speed ?? 1), y]]), sw * .9, PAL.ink, 'inkfine', 0);
+    claw(-1, ...o.claws[0]); claw(1, ...o.claws[1]);
+  }
+  else if (pose === 'wave') { claw(-1, -6.4, 1.6, .25, .9); claw(1, 7.0, -4.6, .55, -.35); }
   else if (pose === 'cheer') { claw(-1, -7.0, -4.6, .55, .35); claw(1, 7.0, -4.6, .55, -.35); }
   else if (pose === 'think') { claw(-1, -6.4, 1.6, .25, .9); claw(1, 3.6, 2.6, .15, -2.2); }
   else if (pose === 'run') {
     // speed lines trailing off to the left, then one claw thrust forward and one back
-    for (const [y, len] of [[-1.6, 3.2], [0.2, 4.2], [2.0, 2.8]]) inkLine(pts([[-6.2, y], [-6.2 - len, y]]), sw * .9, PAL.ink, 'inkfine', 0);
+    for (const [y, len] of [[-1.6, 3.2], [0.2, 4.2], [2.0, 2.8]]) inkLine(pts([[-6.2, y], [-6.2 - len * (o.speed ?? 1), y]]), sw * .9, PAL.ink, 'inkfine', 0);
     claw(-1, -6.8, 3.2, .2, 1.4); claw(1, 7.4, -2.6, .6, -.1);
   }
   else if (pose === 'alarm') { claw(-1, -7.4, -5.2, .7, .5); claw(1, 7.4, -5.2, .7, -.5); }
@@ -88,7 +99,7 @@ function crab(cx, cy, s, o = {}) {
       inkLine([[ex + r * .45, ey - r * .45], [ex - r * .45, ey + r * .45]], sw * 1.3, PAL.ink, 'ink', 0);
       continue;
     }
-    const look = eyes === 'look' ? .38 : 0, px = ex + look * r * (side < 0 ? 1.1 : .7), py = ey + r * .08;
+    const look = o.look ?? (eyes === 'look' ? .38 : 0), px = ex + look * r * (side < 0 ? 1.1 : .7), py = ey + r * .08;
     paint(ellPts(px, py, r * .55, r * .62, 24), { fill: PAL.ink, dots: { col: PAL.pink, r: s * .08, gap: s * .2, from: 0, to: 1 }, ink: null });
     if (eyes === 'star' || side < 0) paint(starPts(px, py, r * .36, .45), { fill: PAL.white, ink: null });
     else paint(ellPts(px - r * .18, py - r * .2, r * .16, r * .16, 12), { fill: PAL.white, ink: null });
@@ -106,6 +117,7 @@ function crab(cx, cy, s, o = {}) {
   }
 
   // little marks by the head
+  if (o.marks === false) return;
   if (pose === 'sleep') {
     label('z', cx + 5.4 * s, cy - 5.6 * s, s * 1.4, PAL.ink, { weight: 700 });
     label('z', cx + 6.4 * s, cy - 7.0 * s, s * 1.9, PAL.ink, { weight: 700 });
