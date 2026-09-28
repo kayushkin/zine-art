@@ -200,3 +200,14 @@ piece('archive-reopen', ST, ST, () => {
 // ---------- avatars ----------
 // discord-signup-store's Event-Manager bot. Discord crops avatars to a circle, so the crab sits inside it on paper.
 piece('avatar-event-manager', 512, 512, () => crab(252, 290, 21, { pose: 'wave' }), { bg: true });
+
+// ---------- favicons ----------
+// dash's tab icon, shown at 16-32px: the crab fills the square, with the heaviest ink of any piece, on a paper disc
+// so the navy outline still reads on a dark tab bar.
+piece('favicon', 256, 256, () => {
+  paint(ellPts(128, 128, 126, 126, 48), { fill: PAL.paper, ink: null });
+  commit();
+  crab(128, 150, 12, { pose: 'wave' });
+}, { brushScale: 1.4 });
+// the home-screen icon on phones, which the phone puts on a rounded square of its own: on paper, with room round it
+piece('apple-touch-icon', 180, 180, () => crab(88, 102, 7.4, { pose: 'wave' }), { bg: true, brushScale: 1.1 });
