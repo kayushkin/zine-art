@@ -1,4 +1,5 @@
-// pieces.js: every picture the zine theme uses. `node render.mjs --pieces` writes each to public/art/zine/<name>.png.
+// pieces.js: every picture the zine theme uses. `node render.mjs --pieces` writes each to public/art/zine/<name>.png, or, for a
+// picture the chat draws (BRIDGE_UI_PIECES at the end), to zine/<name>.png in the bridge-ui clone beside this repo.
 // Transparent backgrounds throughout: the page's own CSS paper shows through.
 
 // ---------- the mascot ----------
@@ -391,3 +392,17 @@ piece('favicon', 256, 256, () => {
 }, { brushScale: 1.4 });
 // the home-screen icon on phones, which the phone puts on a rounded square of its own: on paper, with room round it
 piece('apple-touch-icon', 180, 180, () => crab(88, 102, 7.4, { pose: 'wave' }), { bg: true, brushScale: 1.1 });
+
+// ---------- where each picture lives ----------
+// bridge-ui's zine.css draws these, so they ship with bridge-ui and dash imports the ones it shows itself. Any other
+// piece is dash's own. A misspelt name here fails the render rather than landing a picture in the wrong repo.
+const BRIDGE_UI_PIECES = [
+  'star', 'crab-sleep', 'crab-hello-frames', 'archive-box', 'archive-reopen',
+  ...Object.keys(MOOD_FRAMES).map(mood => `crab-mini-${mood}-frames`),
+  ...Object.keys(CONDUCTOR_FRAMES).map(state => `conductor-${state}-frames`),
+  ...Object.keys(PIECES).filter(name => name.startsWith('status-')),
+];
+for (const name of BRIDGE_UI_PIECES) {
+  if (!PIECES[name]) throw new Error(`BRIDGE_UI_PIECES names ${name}, which is not a piece`);
+  PIECES[name].home = 'bridge-ui';
+}

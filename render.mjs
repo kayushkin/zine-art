@@ -1,5 +1,6 @@
 // render.mjs: paint the zine theme's pictures in headless Chrome.
-//   node render.mjs --pieces [--only=crab-wave,star]   write public/art/zine/<name>.png
+//   node render.mjs --pieces [--only=crab-wave,star]   write public/art/zine/<name>.png, or bridge-ui's zine/<name>.png for
+//                                                       a piece whose home is bridge-ui (BRIDGE_UI_PIECES in pieces.js)
 //   node render.mjs --sheet [--only=…] --out=out/sheet.png   every piece on one checker sheet, for looking at
 import { chromium } from 'playwright-core'
 import { createServer } from 'node:http'
@@ -9,7 +10,8 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true] }))
-const outDir = join(here, '..', 'public', 'art', 'zine')
+// the bridge-ui clone beside this repo, as package.json's file: link finds it
+const outDirs = { dash: join(here, '..', 'public', 'art', 'zine'), 'bridge-ui': join(here, '..', '..', 'bridge-ui', 'zine') }
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 
 // p5 loads its scripts over http, not file://, so serve this folder on a free port for the run.
@@ -32,7 +34,8 @@ page.on('console', m => { if (m.type() === 'error') failures.push(m.text()) })
 
 await page.goto(base + '?piece=__list__').catch(() => {})
 await page.waitForFunction(() => typeof PIECES === 'object')
-let names = await page.evaluate(() => Object.keys(PIECES))
+const homes = await page.evaluate(() => Object.fromEntries(Object.entries(PIECES).map(([name, p]) => [name, p.home ?? 'dash'])))
+let names = Object.keys(homes)
 if (args.only) names = String(args.only).split(',')
 failures.length = 0
 
@@ -49,9 +52,13 @@ for (const name of names) {
 }
 
 if (args.pieces) {
-  await mkdir(outDir, { recursive: true })
-  for (const { name, png } of shots) await writeFile(join(outDir, `${name}.png`), png)
-  console.log(`wrote ${shots.length} pictures to ${outDir}`)
+  for (const { name, png } of shots) {
+    const outDir = outDirs[homes[name]]
+    if (!outDir) throw new Error(`${name}: no folder for home ${homes[name]}`)
+    await mkdir(outDir, { recursive: true })
+    await writeFile(join(outDir, `${name}.png`), png)
+    console.log(`wrote ${join(outDir, name)}.png`)
+  }
 }
 if (args.sheet) {
   // lay the pieces out on paper so transparent edges show what they will look like on the page
