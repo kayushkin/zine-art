@@ -1,5 +1,6 @@
-// pieces.js: every picture the zine theme uses. `node render.mjs --pieces` writes each to public/art/zine/<name>.png, or, for a
-// picture the chat draws (BRIDGE_UI_PIECES at the end), to zine/<name>.png in the bridge-ui clone beside this repo.
+// pieces.js: every picture the zine theme uses. `node render.mjs --pieces` writes each into the repo that serves it, in a
+// clone beside this one: bridge-ui's zine/<name>.png for a picture the chat draws (BRIDGE_UI_PIECES at the end), and
+// dash's public/art/zine/<name>.png for the rest.
 // Transparent backgrounds throughout: the page's own CSS paper shows through.
 
 // ---------- the mascot ----------

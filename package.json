@@ -1,11 +1,12 @@
 {
-  "name": "dash-art",
+  "name": "zine-art",
   "private": true,
-  "description": "The zine theme's pictures: p5.js + p5.brush code, painted to PNG in headless Chrome",
+  "description": "The zine theme's pictures for dash and bridge-ui: p5.js + p5.brush code, painted to PNG in headless Chrome",
   "type": "module",
   "dependencies": {
     "p5": "2.3.4",
     "p5.brush": "2.2.3",
     "playwright-core": "1.63.0"
-  }
+  },
+  "license": "Apache-2.0"
 }
