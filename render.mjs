@@ -3,6 +3,7 @@
 //                                                       zine/<name>.png (BRIDGE_UI_PIECES in pieces.js), else dash's
 //                                                       public/art/zine/<name>.png
 //   node render.mjs --sheet [--only=…] --out=out/sheet.png   every piece on one checker sheet, for looking at
+//   kayushkin.com's library shelf pieces (shelf-*) go to its public/art/library/
 import { chromium } from 'playwright-core'
 import { createServer } from 'node:http'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
@@ -12,7 +13,13 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true] }))
 // the dash and bridge-ui clones beside this repo (~/repos/<name>)
-const outDirs = { dash: join(here, '..', 'dash', 'public', 'art', 'zine'), 'bridge-ui': join(here, '..', 'bridge-ui', 'zine') }
+const outDirs = {
+  dash: join(here, '..', 'dash', 'public', 'art', 'zine'),
+  'bridge-ui': join(here, '..', 'bridge-ui', 'zine'),
+  'kayushkin.com': join(here, '..', 'kayushkin.com', 'public', 'art', 'library'),
+}
+// --into=<dir> writes every rendered piece there instead, for a worktree of the repo that serves them.
+if (args.into) for (const home of Object.keys(outDirs)) outDirs[home] = String(args.into)
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 
 // p5 loads its scripts over http, not file://, so serve this folder on a free port for the run.

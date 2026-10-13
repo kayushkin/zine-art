@@ -394,6 +394,140 @@ piece('favicon', 256, 256, () => {
 // the home-screen icon on phones, which the phone puts on a rounded square of its own: on paper, with room round it
 piece('apple-touch-icon', 180, 180, () => crab(88, 102, 7.4, { pose: 'wave' }), { bg: true, brushScale: 1.1 });
 
+// ---------- the library's shelf ----------
+// kayushkin.com/library picks a shelf from a painted bookshelf: one object per shelf, each standing on the plank
+// (the page draws the plank), so every object's base sits on the bottom edge of its 300x300 canvas.
+const SHELF = 300, FLOOR = 288;
+
+// an ink drop shadow offset down-right, the zine's hard sticker shadow
+function shadowed(pts, o) {
+  paint(move(pts, 7, 7), { fill: PAL.ink, ink: null, curv: o.curv });
+  commit();
+  paint(pts, o);
+  commit();
+}
+// a band of an annulus between two angles, for headphone bands and mic yokes
+function arcBand(cx, cy, r0, r1, a0, a1, n = 28) {
+  const out = [], inn = [];
+  for (let i = 0; i <= n; i++) { const a = lerp(a0, a1, i / n); out.push([cx + Math.cos(a) * r1, cy + Math.sin(a) * r1]); inn.push([cx + Math.cos(a) * r0, cy + Math.sin(a) * r0]); }
+  return out.concat(inn.reverse());
+}
+
+// Books: two upright, one leaning, and headphones over them, since audiobooks share the shelf.
+piece('shelf-books', SHELF, SHELF, () => {
+  // leaning right, resting on its bottom-right corner, so its foot stays on the plank
+  const lean = rotPts(rectPts(168, FLOOR - 196, 54, 196, 1.5), 222, FLOOR - 2, .28);
+  shadowed(lean, { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 2.4, gap: 7, from: .2, to: 1, fade: 0 }, sw: 2 });
+  const a = rectPts(36, FLOOR - 206, 62, 206, 1.5);
+  shadowed(a, { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2.6, gap: 7.5, from: 0, to: 1, fade: 0 }, sw: 2 });
+  paint(rectPts(44, FLOOR - 150, 46, 30, 1), { fill: PAL.cream, sw: 1.4 });
+  inkLine([[38, FLOOR - 186], [96, FLOOR - 186]], 1.4); inkLine([[38, FLOOR - 26], [96, FLOOR - 26]], 1.4);
+  commit();
+  const b = rectPts(100, FLOOR - 228, 70, 228, 1.5);
+  shadowed(b, { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 2.6, gap: 7.5, from: 0, to: 1, fade: 0 }, sw: 2 });
+  paint(starPts(135, FLOOR - 120, 19, .46), { fill: PAL.white, sw: 1.4 });
+  inkLine([[102, FLOOR - 206], [168, FLOOR - 206]], 1.4); inkLine([[102, FLOOR - 30], [168, FLOOR - 30]], 1.4);
+  commit();
+  // headphones hung over the pink book
+  paint(arcBand(135, FLOOR - 214, 46, 56, Math.PI * 1.02, Math.PI * 1.98), { fill: PAL.ink, ink: null });
+  commit();
+  for (const x of [86, 184]) {
+    paint(ellPts(x, FLOOR - 204, 17, 25, 20, .8), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2, gap: 6 }, sw: 1.8 });
+    paint(ellPts(x, FLOOR - 204, 7, 12, 14), { fill: PAL.cream, ink: null });
+    commit();
+  }
+});
+
+// Movies: a clapperboard leaning on a film reel.
+piece('shelf-movies', SHELF, SHELF, () => {
+  shadowed(ellPts(186, FLOOR - 112, 100, 100, 40, .8), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2.8, gap: 8, from: 0, to: 1, fade: Math.PI * .75 }, sw: 2.2 });
+  for (let i = 0; i < 6; i++) {
+    const t = i / 6 * TAU + .3;
+    paint(ellPts(186 + Math.cos(t) * 56, FLOOR - 112 + Math.sin(t) * 56, 20, 20, 18), { fill: PAL.paper, sw: 1.6 });
+  }
+  paint(ellPts(186, FLOOR - 112, 13, 13, 14), { fill: PAL.ink, ink: null });
+  commit();
+  const body = rectPts(22, FLOOR - 128, 176, 128, 1.2);
+  shadowed(body, { fill: PAL.ink, ink: PAL.inkDk, sw: 2 });
+  for (const [y, txt] of [[FLOOR - 92, 'SCENE 7'], [FLOOR - 58, 'TAKE 2'], [FLOOR - 24, 'LIBRARY']]) {
+    inkLine([[34, y + 14], [186, y + 14]], 1.2, PAL.cream, 'inkfine', 0);
+    label(txt, 38, y, 19, PAL.cream, { weight: 700 });
+  }
+  commit();
+  // the striped arm, opened up from its hinge at the board's top-left
+  const hinge = [22, FLOOR - 130], tilt = -.34;
+  const arm = rotPts(rectPts(22, FLOOR - 164, 178, 32, .8), hinge[0], hinge[1], tilt);
+  paint(arm, { fill: PAL.cream, sw: 2 });
+  commit();
+  for (let i = 0; i < 5; i++) {
+    const x = 34 + i * 34;
+    paint(rotPts([[x, FLOOR - 164], [x + 18, FLOOR - 164], [x + 6, FLOOR - 132], [x - 12, FLOOR - 132]], hinge[0], hinge[1], tilt), { fill: PAL.ink, ink: null });
+  }
+  commit();
+  paint(starPts(258, FLOOR - 196, 22, .46, 5, -Math.PI / 2 + .3), { fill: PAL.pink, sw: 1.4 });
+  commit();
+});
+
+// Shows: a little television with rabbit ears and a star on the screen.
+piece('shelf-shows', SHELF, SHELF, () => {
+  for (const [x, y] of [[96, 22], [214, 34]]) {
+    inkLine([[150, FLOOR - 186], [x, y]], 2.2, PAL.ink, 'ink', 0);
+  }
+  commit();
+  for (const [x, y] of [[96, 22], [214, 34]]) paint(ellPts(x, y, 9, 9, 14), { fill: PAL.pink, sw: 1.4 });
+  commit();
+  for (const x of [70, 214]) paint(rectPts(x, FLOOR - 22, 18, 22, .6), { fill: PAL.ink, ink: null });
+  commit();
+  const body = rectPts(26, FLOOR - 196, 248, 178, 1.4);
+  shadowed(body, { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2.6, gap: 7.5, from: 0, to: 1, fade: Math.PI * .6 }, sw: 2.2 });
+  const screen = rectPts(46, FLOOR - 176, 162, 138, 1);
+  paint(screen, { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 3, gap: 8, from: 1, to: .2, fade: Math.PI / 2 }, sw: 2 });
+  commit();
+  paint(starPts(127, FLOOR - 104, 40, .46, 5, -Math.PI / 2 + .2), { fill: PAL.white, sw: 1.8 });
+  commit();
+  for (const y of [FLOOR - 150, FLOOR - 106]) paint(ellPts(242, y, 14, 14, 16), { fill: PAL.cream, sw: 1.6 });
+  for (let i = 0; i < 4; i++) inkLine([[226, FLOOR - 76 + i * 11], [258, FLOOR - 76 + i * 11]], 1.4, PAL.ink, 'inkfine', 0);
+  commit();
+});
+
+// Manga: volumes stacked flat, numbered on the spine, with a POW burst behind.
+piece('shelf-manga', SHELF, SHELF, () => {
+  shadowed(starPts(212, 86, 76, .62, 11, -Math.PI / 2 + .2), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 2.4, gap: 7, from: 0, to: 1, fade: Math.PI / 2 }, sw: 2 });
+  label('POW!', 212, 90, 34, PAL.white, { weight: 900, align: 'center', rot: -.12, font: '"DejaVu Sans", sans-serif' });
+  commit();
+  const vols = [
+    [30, FLOOR - 44, 214, 44, PAL.orange, PAL.orangeDk, '1'],
+    [44, FLOOR - 86, 200, 42, PAL.cream, PAL.pinkLt, '2'],
+    [24, FLOOR - 128, 206, 42, PAL.pink, PAL.pinkDk, '3'],
+    [52, FLOOR - 168, 188, 40, PAL.cream, PAL.orangeLt, '4'],
+  ];
+  for (const [x, y, w, h, fill, dot, n] of vols) {
+    shadowed(rectPts(x, y, w, h, 1), { fill, dots: { col: dot, r: 2.2, gap: 6.5, from: 0, to: 1, fade: 0 }, sw: 2 });
+    paint(rectPts(x + w - 44, y + 6, 32, h - 12, .6), { fill: PAL.ink, ink: null });
+    label(n, x + w - 28, y + h / 2 + 1, 22, PAL.cream, { weight: 700, align: 'center' });
+    inkLine([[x + 14, y + h / 2], [x + w - 60, y + h / 2]], 1.3, PAL.ink, 'inkfine', 0);
+    commit();
+  }
+});
+
+// Podcasts: a studio microphone on its stand, with sound coming off it.
+piece('shelf-podcasts', SHELF, SHELF, () => {
+  shadowed(ellPts(150, FLOOR - 12, 78, 15, 28, .6), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2, gap: 6 }, sw: 2 });
+  paint(rectPts(141, FLOOR - 96, 18, 86, .5), { fill: PAL.ink, ink: null });
+  commit();
+  paint(arcBand(150, FLOOR - 176, 80, 92, Math.PI * .02, Math.PI * .98), { fill: PAL.ink, ink: null });
+  commit();
+  const head = ellPts(150, FLOOR - 186, 62, 86, 40, .6);
+  shadowed(head, { fill: PAL.cream, dots: { col: PAL.ink, r: 2.1, gap: 9, from: 1, to: .5, fade: 0 }, sw: 2.2 });
+  paint(rectPts(86, FLOOR - 186, 128, 24, .8), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 1.8, gap: 6 }, sw: 1.8 });
+  commit();
+  for (const side of [-1, 1]) for (const r of [102, 126]) {
+    const pts = []; for (let i = 0; i <= 12; i++) { const a = side * (-.5 + i / 12) * .9 + (side < 0 ? Math.PI : 0); pts.push([150 + Math.cos(a) * r, FLOOR - 190 + Math.sin(a) * r]); }
+    inkLine(pts, 2, PAL.orange, 'inkfine', .5);
+  }
+  commit();
+});
+
 // ---------- where each picture lives ----------
 // bridge-ui's zine.css draws these, so they ship with bridge-ui and dash imports the ones it shows itself. Any other
 // piece is dash's own. A misspelt name here fails the render rather than landing a picture in the wrong repo.
@@ -407,3 +541,6 @@ for (const name of BRIDGE_UI_PIECES) {
   if (!PIECES[name]) throw new Error(`BRIDGE_UI_PIECES names ${name}, which is not a piece`);
   PIECES[name].home = 'bridge-ui';
 }
+
+// kayushkin.com/library draws these; render.mjs writes them into that repo's public/art/library/.
+for (const name of Object.keys(PIECES).filter(n => n.startsWith('shelf-'))) PIECES[name].home = 'kayushkin.com'
