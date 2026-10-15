@@ -528,23 +528,41 @@ piece('shelf-podcasts', SHELF, SHELF, () => {
   commit();
 });
 
-// Music: a vinyl record standing on its edge in front of a little speaker, with a note floating up.
+// Music: a vinyl record standing on its edge in front of a little speaker, with a note floating up. The page
+// stacks three layers so the record alone can spin while music plays: shelf-music behind, shelf-music-record, and
+// shelf-music-front over it. All three share one canvas, and the record turns about its centre.
+const MUSIC_RECORD = { cx: 116, r: 104, cy: FLOOR - 104 };
 piece('shelf-music', SHELF, SHELF, () => {
   // the speaker cabinet behind, on the right
   shadowed(rectPts(166, FLOOR - 214, 112, 214, 1.4), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2.6, gap: 7.5, from: 0, to: 1, fade: Math.PI * .6 }, sw: 2.2 });
   paint(ellPts(222, FLOOR - 172, 20, 20, 20), { fill: PAL.cream, sw: 1.8 });
   paint(ellPts(222, FLOOR - 172, 7, 7, 12), { fill: PAL.ink, ink: null });
   commit();
-  // the record, upright with its foot on the plank
-  const cx = 116, r = 104, cy = FLOOR - r;
-  shadowed(ellPts(cx, cy, r, r, 48, .6), { fill: PAL.ink, ink: PAL.inkDk, sw: 2.2 });
+  // the record's shadow stays put while the record turns
+  const { cx, cy, r } = MUSIC_RECORD;
+  paint(move(ellPts(cx, cy, r, r, 48), 7, 7), { fill: PAL.ink, ink: null });
+  commit();
+});
+
+// the record, upright with its foot on the plank; drawn round so it reads the same at any angle
+piece('shelf-music-record', SHELF, SHELF, () => {
+  const { cx, cy, r } = MUSIC_RECORD;
+  paint(ellPts(cx, cy, r, r, 48), { fill: PAL.ink, ink: PAL.inkDk, sw: 2.2 });
   for (const gr of [88, 74, 60]) inkLine(ellPts(cx, cy, gr, gr, 40).concat([[cx + gr, cy]]), 1.1, PAL.orangeLt, 'inkfine', .5);
-  // a glint across the grooves
-  inkLine(ellPts(cx, cy, 80, 80, 40).slice(24, 30), 3, PAL.cream, 'ink', .5);
   commit();
   paint(ellPts(cx, cy, 36, 36, 28), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 2, gap: 6, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.8 });
   commit();
+  // a cream band printed on the label, so the turning shows
+  paint(arcBand(cx, cy, 16, 27, -2.5, -1.2, 16), { fill: PAL.cream, ink: null });
+  commit();
   paint(ellPts(cx, cy, 6, 6, 12), { fill: PAL.paper, sw: 1.2 });
+  commit();
+});
+
+piece('shelf-music-front', SHELF, SHELF, () => {
+  const { cx, cy } = MUSIC_RECORD;
+  // a glint across the grooves: light from the room, so it does not turn with the record
+  inkLine(ellPts(cx, cy, 80, 80, 40).slice(24, 30), 3, PAL.cream, 'ink', .5);
   commit();
   // the woofer, showing below and right of the record
   paint(ellPts(232, FLOOR - 82, 34, 34, 28), { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 2.2, gap: 6.5, from: 1, to: .2, fade: Math.PI / 2 }, sw: 2 });
