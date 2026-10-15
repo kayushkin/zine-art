@@ -528,6 +528,38 @@ piece('shelf-podcasts', SHELF, SHELF, () => {
   commit();
 });
 
+// Music: a vinyl record standing on its edge in front of a little speaker, with a note floating up.
+piece('shelf-music', SHELF, SHELF, () => {
+  // the speaker cabinet behind, on the right
+  shadowed(rectPts(166, FLOOR - 214, 112, 214, 1.4), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2.6, gap: 7.5, from: 0, to: 1, fade: Math.PI * .6 }, sw: 2.2 });
+  paint(ellPts(222, FLOOR - 172, 20, 20, 20), { fill: PAL.cream, sw: 1.8 });
+  paint(ellPts(222, FLOOR - 172, 7, 7, 12), { fill: PAL.ink, ink: null });
+  commit();
+  // the record, upright with its foot on the plank
+  const cx = 116, r = 104, cy = FLOOR - r;
+  shadowed(ellPts(cx, cy, r, r, 48, .6), { fill: PAL.ink, ink: PAL.inkDk, sw: 2.2 });
+  for (const gr of [88, 74, 60]) inkLine(ellPts(cx, cy, gr, gr, 40).concat([[cx + gr, cy]]), 1.1, PAL.orangeLt, 'inkfine', .5);
+  // a glint across the grooves
+  inkLine(ellPts(cx, cy, 80, 80, 40).slice(24, 30), 3, PAL.cream, 'ink', .5);
+  commit();
+  paint(ellPts(cx, cy, 36, 36, 28), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 2, gap: 6, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.8 });
+  commit();
+  paint(ellPts(cx, cy, 6, 6, 12), { fill: PAL.paper, sw: 1.2 });
+  commit();
+  // the woofer, showing below and right of the record
+  paint(ellPts(232, FLOOR - 82, 34, 34, 28), { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 2.2, gap: 6.5, from: 1, to: .2, fade: Math.PI / 2 }, sw: 2 });
+  paint(ellPts(232, FLOOR - 82, 13, 13, 16), { fill: PAL.ink, ink: null });
+  commit();
+  // an eighth-note pair floating in the corner above the record
+  paint([[44, 58], [50, 58], [50, 16], [44, 16]], { fill: PAL.ink, ink: null });
+  paint([[90, 46], [96, 46], [96, 4], [90, 4]], { fill: PAL.ink, ink: null });
+  paint([[44, 16], [96, 4], [96, 18], [44, 30]], { fill: PAL.ink, ink: null });
+  commit();
+  paint(ellPts(35, 61, 15, 11, 20, 0, -.4), { fill: PAL.pink, sw: 1.8 });
+  paint(ellPts(81, 49, 15, 11, 20, 0, -.4), { fill: PAL.pink, sw: 1.8 });
+  commit();
+});
+
 // ---------- where each picture lives ----------
 // bridge-ui's zine.css draws these, so they ship with bridge-ui and dash imports the ones it shows itself. Any other
 // piece is dash's own. A misspelt name here fails the render rather than landing a picture in the wrong repo.
