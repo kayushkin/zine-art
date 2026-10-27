@@ -578,6 +578,41 @@ piece('shelf-music-front', SHELF, SHELF, () => {
   commit();
 });
 
+// Sheets: a music stand holding an open book of sheet music, staves and notes on both pages.
+piece('shelf-sheets', SHELF, SHELF, () => {
+  // three legs and the pole, in ink
+  for (const x of [92, 150, 208]) inkLine([[150, FLOOR - 64], [x, FLOOR - 2]], 3.2, PAL.ink, 'ink', 0);
+  commit();
+  paint(rectPts(144, FLOOR - 140, 12, 80, .4), { fill: PAL.ink, ink: null });
+  commit();
+  // the open book, each page leaning out from the spine
+  const pages = [
+    { pts: rotPts(rectPts(44, FLOOR - 262, 106, 124, 1.2), 150, FLOOR - 140, -.05), fill: PAL.cream, x0: 52, flip: -.05 },
+    { pts: rotPts(rectPts(150, FLOOR - 262, 106, 124, 1.2), 150, FLOOR - 140, .05), fill: PAL.white, x0: 158, flip: .05 },
+  ];
+  for (const pg of pages) shadowed(pg.pts, { fill: pg.fill, dots: { col: PAL.pinkLt, r: 2.2, gap: 7, from: 1, to: .3, fade: Math.PI / 2 }, sw: 2 });
+  // two staves a page, five lines each, and a few notes on them
+  for (const pg of pages) {
+    for (const top of [FLOOR - 244, FLOOR - 196]) {
+      for (let i = 0; i < 5; i++) inkLine(rotPts([[pg.x0, top + i * 6], [pg.x0 + 90, top + i * 6]], 150, FLOOR - 140, pg.flip), 1.1, PAL.ink, 'inkfine', 0);
+    }
+  }
+  commit();
+  const notes = [[66, FLOOR - 232], [84, FLOOR - 226], [104, FLOOR - 238], [126, FLOOR - 229], [70, FLOOR - 181], [96, FLOOR - 187],
+                 [172, FLOOR - 235], [192, FLOOR - 241], [214, FLOOR - 229], [236, FLOOR - 235], [178, FLOOR - 184], [222, FLOOR - 178]];
+  for (const [x, y] of notes) {
+    const flip = x < 150 ? -.05 : .05;
+    paint(rotPts(ellPts(x, y, 5.4, 4, 14, 0, -.4), 150, FLOOR - 140, flip), { fill: PAL.ink, ink: null });
+    paint(rotPts([[x + 4, y], [x + 5.6, y], [x + 5.6, y - 22], [x + 4, y - 22]], 150, FLOOR - 140, flip), { fill: PAL.ink, ink: null });
+  }
+  commit();
+  // the stand's ledge the book rests on
+  shadowed(rectPts(30, FLOOR - 150, 240, 24, .8), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 2, gap: 6, from: 0, to: 1, fade: 0 }, sw: 2 });
+  // a pink star sticker on the corner of the right page
+  paint(starPts(250, FLOOR - 262, 20, .46, 5, -Math.PI / 2 + .25), { fill: PAL.pink, sw: 1.4 });
+  commit();
+});
+
 // ---------- where each picture lives ----------
 // bridge-ui's zine.css draws these, so they ship with bridge-ui and dash imports the ones it shows itself. Any other
 // piece is dash's own. A misspelt name here fails the render rather than landing a picture in the wrong repo.
