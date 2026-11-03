@@ -9,7 +9,7 @@ piece('crab-cheer', 620, 560, () => crab(310, 360, 30, { pose: 'cheer', eyes: 's
 piece('crab-think', 620, 560, () => crab(290, 360, 30, { pose: 'think', eyes: 'look', mouth: 'flat' }));
 piece('crab-sleep', 620, 560, () => crab(290, 370, 30, { pose: 'sleep', eyes: 'closed' }));
 // the status row's mascot, one animation per mood of bridge-ui's status slot (`data-mood`), frame by frame (`frames: n`, see core.js), in one 220×200 cell each so zine.css
-// treats them alike. Each takes the crab's centre and unit, so the loading and empty-chat crabs reuse them at size.
+// treats them alike. Each takes the crab's center and unit, so the loading and empty-chat crabs reuse them at size.
 const MINI = { w: 220, h: 200, brushScale: 1.1 };
 function thoughtDots(cx, cy, s, count) {
   // rising from the head to the upper right, each bigger than the last
@@ -530,7 +530,7 @@ piece('shelf-podcasts', SHELF, SHELF, () => {
 
 // Music: a vinyl record standing on its edge in front of a little speaker, with a note floating up. The page
 // stacks three layers so the record alone can spin while music plays: shelf-music behind, shelf-music-record, and
-// shelf-music-front over it. All three share one canvas, and the record turns about its centre.
+// shelf-music-front over it. All three share one canvas, and the record turns about its center.
 const MUSIC_RECORD = { cx: 116, r: 104, cy: FLOOR - 104 };
 piece('shelf-music', SHELF, SHELF, () => {
   // the speaker cabinet behind, on the right

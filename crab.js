@@ -1,7 +1,7 @@
 // crab.js: Dash's mascot, the 🦀 of the brand drawn as a riso-print switchboard operator. An orange puffy shell,
 // big eyes on stalks (a star in one), pink cheeks, a navy headset with a boom mic, and two claws.
 //
-// crab(cx, cy, s, o): (cx, cy) is the centre of the shell, `s` the unit; the shell is 10s wide and 6.4s tall, the
+// crab(cx, cy, s, o): (cx, cy) is the center of the shell, `s` the unit; the shell is 10s wide and 6.4s tall, the
 // eyes reach up to about -7s and the legs down to about +5s.
 //   o.pose:  'wave' (right claw up), 'cheer' (both up), 'think' (claw at the chin), 'sleep' (eyes shut, claws down),
 //            'run' (claws pumping, speed lines behind), 'alarm' (claws flung up, a "!" by the head)

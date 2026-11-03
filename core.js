@@ -50,9 +50,9 @@ const move = (pts, dx, dy) => pts.map(([x, y]) => [x + dx, y + dy]);
 function rotPts(pts, cx, cy, a) { const c = Math.cos(a), s = Math.sin(a); return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]); }
 
 // ---------- paint ----------
-// o.fill: flat colour. o.dots: { col, r, gap, angle, from, to, fade } halftone dots clipped to the shape; the dot
+// o.fill: flat color. o.dots: { col, r, gap, angle, from, to, fade } halftone dots clipped to the shape; the dot
 // radius runs from `from` to `to` (0..1 of r) along direction `fade` (radians), which is how the print shades.
-// o.ink: outline colour (null for none), o.sw: weight, o.br: brush, o.curv: smooth the outline through the points.
+// o.ink: outline color (null for none), o.sw: weight, o.br: brush, o.curv: smooth the outline through the points.
 function paint(pts, o = {}) {
   if (o.fill) {
     brush.noStroke(); brush.noHatch(); brush.noFill(); brush.wash(o.fill, o.op ?? 255);
@@ -101,7 +101,7 @@ function halftone(pts, d, curv) {
 
 // Lay the queued dots over the fills painted so far, then the queued ink over both.
 function commit() {
-  // p5.brush defers washes into a mask layer; a tiny off-canvas watercolour fill forces it to composite now, so the
+  // p5.brush defers washes into a mask layer; a tiny off-canvas watercolor fill forces it to composite now, so the
   // dots land over the fills rather than under them (the same trick PDoomVideo's flushLetters uses).
   brush.noStroke(); brush.noHatch(); brush.noWash(); brush.fill('#000000', 1); brush.fillBleed(0); brush.fillTexture(0, 0);
   brush.polygon([[-50, -50], [-40, -50], [-40, -40]]); brush.noFill();
