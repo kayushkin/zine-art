@@ -613,6 +613,155 @@ piece('shelf-sheets', SHELF, SHELF, () => {
   commit();
 });
 
+// ---------- machines ----------
+// bridge-ui's Machines page, where each computer reports its health. The section pictures sit beside a heading at
+// 40px and the machine pictures in each card's header at 64px, so both are painted at twice that with plain shapes,
+// a hard ink shadow like the shelf's, thin brushes so the ink does not swallow the shape, and no lettering. Small
+// marks are filled shapes rather than ink lines, which blot at this size.
+const MACHINE_SECTION = 80, MACHINE_CARD = 128;
+const MACHINE_SECTION_OPTIONS = { brushScale: .7 }, MACHINE_CARD_OPTIONS = { brushScale: .8 };
+function machineShadowed(pts, o, offset) {
+  paint(move(pts, offset, offset), { fill: PAL.ink, ink: null, curv: o.curv });
+  commit();
+  paint(pts, o);
+  commit();
+}
+// a row of pins or contacts, each a small filled rectangle
+function machinePins(x0, y0, dx, dy, count, w, h, fill = PAL.ink) {
+  for (let i = 0; i < count; i++) paint(rectPts(x0 + i * dx, y0 + i * dy, w, h), { fill, ink: null });
+}
+// a fan seen face on: a cream ring, five orange blades swept the same way, a navy hub
+function machineFan(cx, cy, r, sw) {
+  paint(ellPts(cx, cy, r, r, 28), { fill: PAL.cream, sw });
+  commit();
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * TAU + .3, bx = cx + Math.cos(a) * r * .5, by = cy + Math.sin(a) * r * .5;
+    paint(rotPts(ellPts(bx, by, r * .42, r * .2, 14), bx, by, a + .7), { fill: PAL.orange, ink: null });
+  }
+  commit();
+  paint(ellPts(cx, cy, r * .26, r * .26, 14), { fill: PAL.ink, ink: null });
+  commit();
+}
+
+// CPU: a pink chip with pins on all four sides and a cream die in the middle
+piece('machine-cpu', MACHINE_SECTION, MACHINE_SECTION, () => {
+  for (let i = 0; i < 4; i++) {
+    const at = 23 + i * 9.5;
+    for (const [x, y, w, h] of [[at, 5, 5, 14], [at, 61, 5, 14], [5, at, 14, 5], [61, at, 14, 5]]) paint(rectPts(x, y, w, h), { fill: PAL.ink, ink: null });
+  }
+  commit();
+  machineShadowed(rectPts(14, 14, 50, 50), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 1.5, gap: 4.2, from: 0, to: 1, fade: Math.PI / 4 }, sw: 1.2 }, 3);
+  paint(rectPts(27, 27, 24, 24), { fill: PAL.cream, sw: 1 });
+  commit();
+  paint(rectPts(34, 34, 10, 10), { fill: PAL.orange, ink: null });
+  commit();
+}, MACHINE_SECTION_OPTIONS);
+
+// memory: an orange RAM stick with four navy chips, cream contacts along the bottom and the key notch
+piece('machine-memory', MACHINE_SECTION, MACHINE_SECTION, () => {
+  const stick = [[4, 22], [76, 22], [76, 58], [44, 58], [44, 52], [37, 52], [37, 58], [4, 58]];
+  machineShadowed(stick, { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 1.5, gap: 4.2, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.2 }, 3);
+  for (let i = 0; i < 4; i++) paint(rectPts(9 + i * 17, 28, 12, 15), { fill: PAL.ink, ink: null });
+  commit();
+  machinePins(8, 48, 5.5, 0, 5, 3, 7, PAL.cream); machinePins(48, 48, 5.5, 0, 5, 3, 7, PAL.cream);
+  commit();
+}, MACHINE_SECTION_OPTIONS);
+
+// drive: a hard drive with its lid off, an orange platter, a pink hub and the read arm across it
+piece('machine-drive', MACHINE_SECTION, MACHINE_SECTION, () => {
+  machineShadowed(rectPts(13, 5, 54, 70), { fill: PAL.cream, dots: { col: PAL.pinkLt, r: 1.5, gap: 4.2, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.2 }, 3);
+  paint(ellPts(40, 32, 21, 21, 32), { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 1.4, gap: 4, from: 1, to: 0, fade: -Math.PI / 4 }, sw: 1 });
+  commit();
+  paint(ellPts(40, 32, 6, 6, 16), { fill: PAL.pink, sw: .8 });
+  commit();
+  paint([[56, 68], [61, 65], [48, 40], [44, 42]], { fill: PAL.ink, ink: null });
+  paint(ellPts(58, 66, 5, 5, 12), { fill: PAL.ink, ink: null });
+  for (const [x, y] of [[18, 10], [62, 10], [18, 70]]) paint(ellPts(x, y, 1.8, 1.8, 8), { fill: PAL.ink, ink: null });
+  commit();
+}, MACHINE_SECTION_OPTIONS);
+
+// battery: lying on its side, three of four bars charged
+piece('machine-battery', MACHINE_SECTION, MACHINE_SECTION, () => {
+  paint(rectPts(66, 31, 9, 18), { fill: PAL.ink, ink: null });
+  commit();
+  machineShadowed(rectPts(5, 20, 62, 40), { fill: PAL.cream, sw: 1.4 }, 3);
+  for (let i = 0; i < 3; i++) paint(rectPts(11 + i * 13.5, 26, 10, 28), { fill: PAL.orange, dots: { col: PAL.pink, r: 1.3, gap: 3.8, from: 0, to: 1, fade: Math.PI / 2 }, sw: .8 });
+  commit();
+}, MACHINE_SECTION_OPTIONS);
+
+// GPU: a pink card with two fans, a navy bracket on the left and orange contacts below
+piece('machine-gpu', MACHINE_SECTION, MACHINE_SECTION, () => {
+  machinePins(20, 58, 6, 0, 8, 4, 8, PAL.orange);
+  commit();
+  machineShadowed(rectPts(8, 18, 68, 42), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 1.5, gap: 4.2, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.2 }, 3);
+  paint(rectPts(3, 14, 6, 52), { fill: PAL.ink, ink: null });
+  commit();
+  machineFan(28, 39, 14, 1); machineFan(57, 39, 14, 1);
+}, MACHINE_SECTION_OPTIONS);
+
+// server: a navy rack of three units, each with a cream light and vent slots
+piece('machine-server', MACHINE_CARD, MACHINE_CARD, () => {
+  const x = 26, y = 6, w = 72, h = 112, unitH = (h - 18) / 3;
+  machineShadowed(rectPts(x, y, w, h), { fill: PAL.ink, sw: 1.4 }, 5);
+  for (let i = 0; i < 3; i++) {
+    const uy = y + 7 + i * (unitH + 2), pink = i === 1;
+    paint(rectPts(x + 7, uy, w - 14, unitH), { fill: pink ? PAL.pink : PAL.orange, dots: { col: pink ? PAL.pinkDk : PAL.orangeDk, r: 1.7, gap: 4.8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.2 });
+  }
+  commit();
+  for (let i = 0; i < 3; i++) {
+    const uy = y + 7 + i * (unitH + 2);
+    paint(ellPts(x + 18, uy + unitH / 2, 5, 5, 14), { fill: PAL.cream, sw: .8 });
+    for (let k = 0; k < 4; k++) paint(rectPts(x + 32 + k * 8, uy + 7, 4, unitH - 14), { fill: PAL.ink, ink: null });
+  }
+  commit();
+}, MACHINE_CARD_OPTIONS);
+
+// desktop: a monitor with a navy screen, and a pink tower beside it
+piece('machine-desktop', MACHINE_CARD, MACHINE_CARD, () => {
+  machineShadowed([[34, 84], [60, 84], [66, 102], [28, 102]], { fill: PAL.cream, sw: 1.2 }, 4);
+  machineShadowed(rectPts(4, 20, 88, 66), { fill: PAL.cream, sw: 1.4 }, 5);
+  paint(rectPts(11, 27, 74, 52), { fill: PAL.ink, dots: { col: PAL.pink, r: 1.6, gap: 5, from: 1, to: 0, fade: Math.PI / 4 }, ink: null });
+  commit();
+  for (const [y, w] of [[38, 30], [50, 44], [62, 20]]) paint(rectPts(20, y, w, 5), { fill: PAL.orange, ink: null });
+  commit();
+  machineShadowed(rectPts(90, 32, 32, 86), { fill: PAL.pink, dots: { col: PAL.pinkDk, r: 1.7, gap: 4.8, from: 0, to: 1, fade: Math.PI / 2 }, sw: 1.4 }, 5);
+  paint(rectPts(96, 42, 20, 8), { fill: PAL.cream, sw: .9 }); paint(rectPts(96, 56, 20, 8), { fill: PAL.cream, sw: .9 });
+  paint(ellPts(106, 100, 7, 7, 16), { fill: PAL.orange, sw: .9 });
+  commit();
+}, MACHINE_CARD_OPTIONS);
+
+// laptop: open, a cream lid round the screen, on an orange base with a trackpad
+function machineLaptop(cx, base, w, screen, offset, sw) {
+  const lidH = w * .62, inset = w * .06;
+  machineShadowed(rectPts(cx - w * .42, base - lidH, w * .84, lidH), { fill: PAL.cream, sw }, offset);
+  screen(rectPts(cx - w * .42 + inset, base - lidH + inset, w * .84 - inset * 2, lidH - inset * 2));
+  machineShadowed([[cx - w * .44, base], [cx + w * .44, base], [cx + w * .5, base + w * .12], [cx - w * .5, base + w * .12]],
+    { fill: PAL.orange, dots: { col: PAL.orangeDk, r: 1.7, gap: 4.8, from: 0, to: 1, fade: Math.PI / 2 }, sw }, offset);
+  paint(rectPts(cx - w * .1, base + w * .035, w * .2, w * .05), { fill: PAL.cream, ink: null });
+  commit();
+}
+piece('machine-laptop', MACHINE_CARD, MACHINE_CARD, () => {
+  machineLaptop(64, 94, 116, glass => {
+    paint(glass, { fill: PAL.ink, dots: { col: PAL.pink, r: 1.6, gap: 5, from: 1, to: 0, fade: Math.PI / 4 }, ink: null });
+    commit();
+    paint(starPts(64, 59, 19, .46), { fill: PAL.pink, ink: null });
+    commit();
+  }, 5, 1.4);
+}, MACHINE_CARD_OPTIONS);
+
+// the page's empty state, for a server that does not report its stats yet: the crab waits by a laptop whose screen
+// is blank but for a cursor, a thought rising
+piece('machine-crab-waiting', 320, 240, () => {
+  crab(92, 150, 10, { pose: 'think', eyes: 'look', mouth: 'flat', marks: false });
+  thoughtDots(92, 150, 10, 3);
+  machineLaptop(240, 172, 136, glass => {
+    paint(glass, { fill: PAL.white, dots: { col: PAL.pinkLt, r: 2, gap: 6, from: 0, to: 1, fade: Math.PI / 2 }, ink: null });
+    commit();
+    paint(rectPts(196, 104, 12, 20), { fill: PAL.orange, ink: null });
+    commit();
+  }, 6, 1.6);
+}, { brushScale: 1.1 });
+
 // ---------- where each picture lives ----------
 // bridge-ui's zine.css draws these, so they ship with bridge-ui and dash imports the ones it shows itself. Any other
 // piece is dash's own. A misspelt name here fails the render rather than landing a picture in the wrong repo.
@@ -621,6 +770,7 @@ const BRIDGE_UI_PIECES = [
   ...Object.keys(MOOD_FRAMES).map(mood => `crab-mini-${mood}-frames`),
   ...Object.keys(CONDUCTOR_FRAMES).map(state => `conductor-${state}-frames`),
   ...Object.keys(PIECES).filter(name => name.startsWith('status-')),
+  ...Object.keys(PIECES).filter(name => name.startsWith('machine-')),
 ];
 for (const name of BRIDGE_UI_PIECES) {
   if (!PIECES[name]) throw new Error(`BRIDGE_UI_PIECES names ${name}, which is not a piece`);

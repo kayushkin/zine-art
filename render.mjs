@@ -3,6 +3,8 @@
 //                                                       zine/<name>.png (BRIDGE_UI_PIECES in pieces.js), else dash's
 //                                                       public/art/zine/<name>.png
 //   node render.mjs --sheet [--only=…] --out=out/sheet.png   every piece on one checker sheet, for looking at
+//   --sheet-scale=0.5 draws each piece on the sheet at that share of its size: 0.5 shows a piece painted at 2x at the
+//   size the page shows it, and 3 blows a small one up to check its detail
 //   kayushkin.com's library shelf pieces (shelf-*) go to its public/art/library/
 import { chromium } from 'playwright-core'
 import { createServer } from 'node:http'
@@ -71,9 +73,11 @@ if (args.pieces) {
 if (args.sheet) {
   // lay the pieces out on paper so transparent edges show what they will look like on the page
   const out = args.out || join(here, 'out', 'sheet.png')
+  const sheetScale = args['sheet-scale'] ? Number(args['sheet-scale']) : null
+  if (sheetScale !== null && !(sheetScale > 0)) throw new Error(`--sheet-scale must be a positive number, not ${args['sheet-scale']}`)
   await mkdir(dirname(out), { recursive: true })
   const html = `<body style="margin:0;background:#EFE7D6;display:flex;flex-wrap:wrap;gap:12px;padding:12px;width:1500px">${
-    shots.map(s => `<figure style="margin:0;font:14px monospace;color:#2E3B7A"><img style="max-width:480px;max-height:480px;display:block;outline:1px dashed #2E3B7A55" src="data:image/png;base64,${s.png.toString('base64')}"><figcaption>${s.name}</figcaption></figure>`).join('')}</body>`
+    shots.map(s => `<figure style="margin:0;font:14px monospace;color:#2E3B7A"><img style="${sheetScale ? `width:${s.png.readUInt32BE(16) * sheetScale}px` : 'max-width:480px;max-height:480px'};display:block;outline:1px dashed #2E3B7A55" src="data:image/png;base64,${s.png.toString('base64')}"><figcaption>${s.name}</figcaption></figure>`).join('')}</body>`
   await page.setViewportSize({ width: 1524, height: 800 })
   await page.setContent(html)
   await page.screenshot({ path: out, fullPage: true })
